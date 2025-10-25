@@ -1,0 +1,2710 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onice Estudio - Sistema de Reservas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* ==================== INICIO CSS ==================== */
+        
+        /* ===== ESTILOS GENERALES ===== */
+        body {
+            box-sizing: border-box;
+        }
+
+        /* ===== GRADIENTES Y FONDOS ===== */
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #374151 100%);
+        }
+
+        /* ===== TARJETAS DE SERVICIOS ===== */
+        .service-card {
+            transition: all 0.3s ease;
+        }
+
+        .service-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .selected-service {
+            border: 2px solid #1e3a8a;
+            background: #dbeafe;
+        }
+
+        /* ===== CALENDARIO ===== */
+        .calendar-day {
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day:hover {
+            background: #dbeafe;
+        }
+
+        .calendar-day.selected {
+            background: #1e3a8a;
+            color: white;
+        }
+
+        /* ===== HORARIOS ===== */
+        .time-slot {
+            transition: all 0.2s ease;
+        }
+
+        .time-slot:hover {
+            background: #dbeafe;
+        }
+
+        .time-slot.selected {
+            background: #1e3a8a;
+            color: white;
+        }
+
+        .time-slot.occupied {
+            background: #fee2e2;
+            color: #dc2626;
+            cursor: not-allowed;
+        }
+
+        /* ===== CALENDARIO ADMIN INTERACTIVO ===== */
+        .admin-calendar {
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr);
+            gap: 1px;
+            background: #e5e7eb;
+            border: 1px solid #e5e7eb;
+        }
+
+        .admin-calendar-header {
+            background: #f9fafb;
+            padding: 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .admin-calendar-time {
+            background: #f9fafb;
+            padding: 8px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-calendar-cell {
+            background: white;
+            padding: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .admin-calendar-cell:hover {
+            background: #f3f4f6;
+        }
+
+        .admin-calendar-cell.available {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .admin-calendar-cell.available:hover {
+            background: #bbf7d0;
+        }
+
+        .admin-calendar-cell.unavailable {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .admin-calendar-cell.unavailable:hover {
+            background: #fecaca;
+        }
+
+        .admin-calendar-cell.occupied {
+            background: #fef3c7;
+            color: #92400e;
+            cursor: not-allowed;
+        }
+
+        .admin-calendar-cell::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .admin-calendar-cell.available::after {
+            background: #22c55e;
+        }
+
+        .admin-calendar-cell.unavailable::after {
+            background: #ef4444;
+        }
+
+        .admin-calendar-cell.occupied::after {
+            background: #f59e0b;
+        }
+
+        /* ===== CONTROLES DEL CALENDARIO ADMIN ===== */
+        .calendar-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .calendar-nav-btn {
+            background: #1e3a8a;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-nav-btn:hover {
+            background: #1e40af;
+        }
+
+        .calendar-nav-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .calendar-legend {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.available {
+            background: #22c55e;
+        }
+
+        .legend-dot.unavailable {
+            background: #ef4444;
+        }
+
+        .legend-dot.occupied {
+            background: #f59e0b;
+        }
+
+        /* ===== NOTIFICACIONES ===== */
+        .notification {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { 
+                transform: translateX(100%); 
+                opacity: 0; 
+            }
+            to { 
+                transform: translateX(0); 
+                opacity: 1; 
+            }
+        }
+
+        /* ===== NAVEGACIÓN ADMIN ===== */
+        .admin-nav-btn {
+            transition: all 0.3s ease;
+        }
+
+        .admin-nav-btn:hover {
+            background-color: #374151;
+        }
+
+        /* ===== TABLAS ===== */
+        .admin-section table {
+            border-collapse: collapse;
+        }
+
+        .admin-section th {
+            background-color: #f9fafb;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .admin-section td {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        /* ===== FORMULARIOS ===== */
+        input:focus, 
+        select:focus, 
+        textarea:focus {
+            outline: none;
+            ring: 2px;
+            ring-color: #1e3a8a;
+            border-color: #1e3a8a;
+        }
+
+        /* ===== BOTONES ===== */
+        button {
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* ===== ESTADOS DE CITAS ===== */
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-confirmed {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-completed {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-cancelled {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* ===== CAMPO DE REFERENCIA ===== */
+        .reference-field {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .reference-field.show {
+            display: block;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .gradient-bg h1 {
+                font-size: 2rem;
+            }
+            
+            .gradient-bg p {
+                font-size: 1rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-section {
+                padding: 1rem;
+            }
+            
+            .overflow-x-auto {
+                overflow-x: scroll;
+            }
+
+            .admin-calendar {
+                grid-template-columns: 60px repeat(7, 1fr);
+                font-size: 0.75rem;
+            }
+
+            .calendar-controls {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .calendar-legend {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .max-w-4xl {
+                padding: 1rem;
+            }
+            
+            .bg-white.rounded-lg.shadow-lg {
+                padding: 1rem;
+            }
+            
+            .text-4xl {
+                font-size: 2rem;
+            }
+            
+            .text-3xl {
+                font-size: 1.5rem;
+            }
+
+            .admin-calendar {
+                grid-template-columns: 50px repeat(7, 1fr);
+                font-size: 0.625rem;
+            }
+
+            .admin-calendar-cell {
+                min-height: 24px;
+                padding: 2px;
+            }
+        }
+
+        /* ===== ANIMACIONES ADICIONALES ===== */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* ===== UTILIDADES ===== */
+        .shadow-custom {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .border-custom {
+            border: 1px solid #e5e7eb;
+        }
+
+        .text-shadow {
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ===== SCROLLBAR PERSONALIZADA ===== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* ==================== FIN CSS ==================== */
+    </style>
+</head>
+<body class="h-full bg-gray-50 font-sans">
+    <!-- Vista Cliente -->
+    <div id="clientView" class="min-h-full">
+        <!-- Header -->
+        <header class="gradient-bg text-white">
+            <div class="max-w-4xl mx-auto px-4 py-8">
+                <div class="text-center">
+                    <h1 class="text-4xl font-bold mb-2">✨ Onice Estudio</h1>
+                    <p class="text-xl opacity-90">Reserva tu cita de belleza</p>
+                </div>
+                <!-- Botón de acceso admin discreto -->
+                <div class="absolute top-4 right-4">
+                    <button onclick="showAdminLogin()" class="text-white opacity-50 hover:opacity-100 text-sm">
+                        🔐 Admin
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Formulario de Reserva -->
+        <main class="max-w-4xl mx-auto px-4 py-8">
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <form id="reservationForm" onsubmit="submitReservation(event)">
+                    <!-- Información Personal -->
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">📋 Información Personal</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="clientName" class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo *</label>
+                                <input type="text" id="clientName" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-800">
+                            </div>
+                            <div>
+                                <label for="clientPhone" class="block text-sm font-medium text-gray-700 mb-2">Teléfono *</label>
+                                <input type="tel" id="clientPhone" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-800">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label for="clientEmail" class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                                <input type="email" id="clientEmail" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-800">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selección de Servicios -->
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">💅 Selecciona tus Servicios</h2>
+                        <div id="servicesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Los servicios se cargarán dinámicamente -->
+                        </div>
+                        <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                            <h3 class="font-semibold text-blue-800">Servicios Seleccionados:</h3>
+                            <div id="selectedServices" class="mt-2 text-blue-700">
+                                Ningún servicio seleccionado
+                            </div>
+                            <div class="mt-2">
+                                <span class="font-semibold text-blue-800">Total: $</span>
+                                <span id="totalPrice" class="font-bold text-blue-800">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selección de Fecha y Hora -->
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">📅 Fecha y Hora</h2>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Calendario -->
+                            <div>
+                                <h3 class="font-semibold text-gray-700 mb-3">Selecciona una fecha:</h3>
+                                <div id="calendar" class="bg-gray-50 rounded-lg p-4">
+                                    <!-- El calendario se generará dinámicamente -->
+                                </div>
+                            </div>
+                            <!-- Horarios -->
+                            <div>
+                                <h3 class="font-semibold text-gray-700 mb-3">Horarios disponibles:</h3>
+                                <div id="timeSlots" class="grid grid-cols-2 gap-2">
+                                    <p class="col-span-2 text-gray-500 text-center py-4">Selecciona una fecha primero</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Descripción Opcional -->
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">📝 Información Adicional</h2>
+                        <div>
+                            <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Descripción o comentarios especiales (opcional)</label>
+                            <textarea id="description" rows="4" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-800" placeholder="Ej: Tengo el cabello muy rizado, prefiero corte en capas..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Adelanto -->
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">💳 Adelanto para Reserva</h2>
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                            <div class="flex items-center mb-4">
+                                <span class="text-2xl mr-3">⚠️</span>
+                                <div>
+                                    <h3 class="font-semibold text-yellow-800">Adelanto Requerido</h3>
+                                    <p class="text-yellow-700">Se requiere un adelanto del 40% para confirmar tu reserva</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-gray-600">Total de servicios: $<span id="totalAmount">0.00</span></p>
+                                    <p class="text-lg font-bold text-blue-800">Adelanto requerido: $<span id="advanceAmount">0.00</span></p>
+                                </div>
+                                <div>
+                                    <label for="paymentMethod" class="block text-sm font-medium text-gray-700 mb-2">Método de pago</label>
+                                    <select id="paymentMethod" required onchange="handlePaymentMethodChange()" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-800">
+                                        <option value="">Seleccionar método</option>
+                                        <option value="efectivo">Efectivo (en el salón)</option>
+                                        <option value="transferencia">Transferencia Bancaria</option>
+                                        <option value="tarjeta">Tarjeta (en el salón)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Campo de referencia para transferencia -->
+                            <div id="referenceField" class="reference-field mt-4">
+                                <label for="transferReference" class="block text-sm font-medium text-gray-700 mb-2">Número de Referencia de Transferencia *</label>
+                                <input type="text" id="transferReference" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-800" placeholder="Ej: 123456789">
+                                <p class="text-xs text-gray-500 mt-1">Ingresa el número de referencia de tu transferencia bancaria</p>
+                            </div>
+                            
+                            <div class="mt-4 p-4 bg-white rounded border text-center">
+                                <p class="text-sm text-gray-600 mb-2">🔒 Pago Seguro - Demo</p>
+                                <p class="text-xs text-gray-500">En un sistema real, aquí se integraría con un procesador de pagos</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botón de Envío -->
+                    <div class="text-center">
+                        <button type="submit" class="bg-gradient-to-r from-blue-800 to-gray-700 hover:from-blue-900 hover:to-gray-800 text-white font-bold py-4 px-8 rounded-lg text-lg transition-all duration-300 transform hover:scale-105">
+                            🎉 Reservar Cita
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Login Admin -->
+    <div id="adminLoginModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">🔐 Acceso Administrador</h2>
+                <p class="text-gray-600 mt-2">Ingresa tus credenciales para acceder al panel</p>
+            </div>
+            <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+                <div class="mb-4">
+                    <label for="adminUsername" class="block text-sm font-medium text-gray-700 mb-2">Usuario</label>
+                    <input type="text" id="adminUsername" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-800">
+                </div>
+                <div class="mb-6">
+                    <label for="adminPassword" class="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
+                    <input type="password" id="adminPassword" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-800">
+                </div>
+                <div class="flex space-x-4">
+                    <button type="submit" class="flex-1 bg-blue-800 hover:bg-blue-900 text-white py-3 rounded-lg font-semibold">
+                        Ingresar
+                    </button>
+                    <button type="button" onclick="hideAdminLogin()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-semibold">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+            <div class="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-700">
+                <strong>Demo:</strong> Usuario: <code>admin</code> | Contraseña: <code>salon123</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista Administrador -->
+    <div id="adminView" class="hidden min-h-full">
+        <div class="flex h-full">
+            <!-- Sidebar Admin -->
+            <div class="w-64 bg-gray-800 text-white">
+                <div class="p-6 border-b border-gray-700">
+                    <h1 class="text-xl font-bold">👑 Panel Admin</h1>
+                    <p class="text-sm text-gray-300">Onice Estudio</p>
+                    <div class="mt-2 text-xs text-green-400">
+                        ✓ Sesión activa: <span id="adminUserDisplay">admin</span>
+                    </div>
+                </div>
+                <nav class="mt-6">
+                    <button onclick="showAdminSection('dashboard')" class="admin-nav-btn w-full text-left px-6 py-3 hover:bg-gray-700 transition-colors flex items-center space-x-3 bg-gray-700">
+                        <span>📊</span>
+                        <span>Dashboard</span>
+                    </button>
+                    <button onclick="showAdminSection('appointments')" class="admin-nav-btn w-full text-left px-6 py-3 hover:bg-gray-700 transition-colors flex items-center space-x-3">
+                        <span>📅</span>
+                        <span>Citas</span>
+                    </button>
+                    <button onclick="showAdminSection('services')" class="admin-nav-btn w-full text-left px-6 py-3 hover:bg-gray-700 transition-colors flex items-center space-x-3">
+                        <span>💅</span>
+                        <span>Servicios</span>
+                    </button>
+                    <button onclick="showAdminSection('schedule')" class="admin-nav-btn w-full text-left px-6 py-3 hover:bg-gray-700 transition-colors flex items-center space-x-3">
+                        <span>⏰</span>
+                        <span>Horarios</span>
+                    </button>
+                    <button onclick="showAdminSection('control')" class="admin-nav-btn w-full text-left px-6 py-3 hover:bg-gray-700 transition-colors flex items-center space-x-3">
+                        <span>⚙️</span>
+                        <span>Control Sistema</span>
+                    </button>
+                    <button onclick="showAdminSection('reports')" class="admin-nav-btn w-full text-left px-6 py-3 hover:bg-gray-700 transition-colors flex items-center space-x-3">
+                        <span>📈</span>
+                        <span>Reportes</span>
+                    </button>
+                    <div class="border-t border-gray-700 mt-4 pt-4">
+                        <button onclick="switchToClient()" class="w-full text-left px-6 py-3 hover:bg-gray-700 transition-colors flex items-center space-x-3">
+                            <span>👤</span>
+                            <span>Vista Cliente</span>
+                        </button>
+                        <button onclick="logoutAdmin()" class="w-full text-left px-6 py-3 hover:bg-red-700 transition-colors flex items-center space-x-3 text-red-300">
+                            <span>🚪</span>
+                            <span>Cerrar Sesión</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+
+            <!-- Contenido Admin -->
+            <div class="flex-1 overflow-auto bg-gray-50">
+                <!-- Dashboard Admin -->
+                <div id="adminDashboard" class="admin-section p-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-8">Dashboard</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Citas Hoy</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="todayAppointments">0</p>
+                                </div>
+                                <div class="text-blue-500 text-3xl">📅</div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Esta Semana</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="weekAppointments">0</p>
+                                </div>
+                                <div class="text-green-500 text-3xl">📊</div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Este Mes</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="monthAppointments">0</p>
+                                </div>
+                                <div class="text-purple-500 text-3xl">📈</div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Pendientes</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="pendingAppointments">0</p>
+                                </div>
+                                <div class="text-yellow-500 text-3xl">⏳</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Citas Recientes</h3>
+                            <div id="recentAppointments" class="space-y-3">
+                                <p class="text-gray-500 text-sm">No hay citas recientes</p>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Servicios Más Solicitados</h3>
+                            <div id="popularServices" class="space-y-3">
+                                <p class="text-gray-500 text-sm">No hay datos disponibles</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gestión de Citas -->
+                <div id="adminAppointments" class="admin-section hidden p-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <h2 class="text-3xl font-bold text-gray-800">Gestión de Citas</h2>
+                        <div class="flex space-x-4">
+                            <select id="appointmentFilter" onchange="filterAppointments()" class="border border-gray-300 rounded-lg px-4 py-2">
+                                <option value="all">Todas las citas</option>
+                                <option value="pending">Pendientes</option>
+                                <option value="confirmed">Confirmadas</option>
+                                <option value="completed">Completadas</option>
+                                <option value="cancelled">Canceladas</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha/Hora</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Servicios</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="appointmentsList" class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">No hay citas registradas</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gestión de Servicios -->
+                <div id="adminServices" class="admin-section hidden p-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <h2 class="text-3xl font-bold text-gray-800">Gestión de Servicios</h2>
+                        <button onclick="showAddServiceForm()" class="bg-blue-800 hover:bg-blue-900 text-white px-6 py-2 rounded-lg">
+                            + Agregar Servicio
+                        </button>
+                    </div>
+
+                    <!-- Formulario Agregar Servicio -->
+                    <div id="addServiceForm" class="hidden bg-white rounded-lg shadow p-6 mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Nuevo Servicio</h3>
+                        <form onsubmit="addService(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="serviceName" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Servicio</label>
+                                <input type="text" id="serviceName" required class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                            </div>
+                            <div>
+                                <label for="servicePrice" class="block text-sm font-medium text-gray-700 mb-1">Precio ($)</label>
+                                <input type="number" id="servicePrice" required min="0" step="0.01" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                            </div>
+                            <div>
+                                <label for="serviceDuration" class="block text-sm font-medium text-gray-700 mb-1">Duración (minutos)</label>
+                                <input type="number" id="serviceDuration" required min="15" step="15" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                            </div>
+                            <div>
+                                <label for="serviceCategory" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+                                <select id="serviceCategory" required class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                    <option value="">Seleccionar categoría</option>
+                                    <option value="Cabello">Cabello</option>
+                                    <option value="Uñas">Uñas</option>
+                                    <option value="Facial">Facial</option>
+                                    <option value="Corporal">Corporal</option>
+                                    <option value="Maquillaje">Maquillaje</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label for="serviceDescription" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                                <textarea id="serviceDescription" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2"></textarea>
+                            </div>
+                            <div class="md:col-span-2 flex space-x-4">
+                                <button type="submit" class="bg-blue-800 hover:bg-blue-900 text-white px-6 py-2 rounded-lg">
+                                    Guardar Servicio
+                                </button>
+                                <button type="button" onclick="hideAddServiceForm()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Lista de Servicios -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Servicio</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoría</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Precio</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duración</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminServicesList" class="bg-white divide-y divide-gray-200">
+                                    <!-- Los servicios se cargarán aquí -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gestión de Horarios -->
+                <div id="adminSchedule" class="admin-section hidden p-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-8">⏰ Gestión de Horarios</h2>
+                    
+                    <!-- Controles del Calendario -->
+                    <div class="calendar-controls">
+                        <div class="flex items-center space-x-4">
+                            <button id="prevWeekBtn" onclick="changeWeek(-1)" class="calendar-nav-btn">
+                                ← Semana Anterior
+                            </button>
+                            <div class="text-lg font-semibold text-gray-800" id="currentWeekDisplay">
+                                <!-- Se actualizará dinámicamente -->
+                            </div>
+                            <button id="nextWeekBtn" onclick="changeWeek(1)" class="calendar-nav-btn">
+                                Siguiente Semana →
+                            </button>
+                        </div>
+                        
+                        <div class="calendar-legend">
+                            <div class="legend-item">
+                                <div class="legend-dot available"></div>
+                                <span>Disponible</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot unavailable"></div>
+                                <span>No Disponible</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot occupied"></div>
+                                <span>Ocupado</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calendario Interactivo -->
+                    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                        <div class="mb-4 flex justify-between items-center">
+                            <h3 class="text-lg font-semibold text-gray-800">Calendario de Disponibilidad</h3>
+                            <div class="flex space-x-2">
+                                <button onclick="setAllWeekAvailable(true)" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
+                                    ✓ Toda la Semana
+                                </button>
+                                <button onclick="setAllWeekAvailable(false)" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">
+                                    ✗ Cerrar Semana
+                                </button>
+                                <button onclick="resetWeekToDefault()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+                                    🔄 Restaurar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="adminCalendarGrid" class="admin-calendar">
+                            <!-- El calendario se generará dinámicamente -->
+                        </div>
+                        
+                        <div class="mt-4 text-sm text-gray-600">
+                            <p><strong>Instrucciones:</strong> Haz clic en cualquier celda para cambiar su disponibilidad. Verde = Disponible, Rojo = No disponible, Amarillo = Ocupado con cita.</p>
+                        </div>
+                    </div>
+
+                    <!-- Configuración Rápida -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Configuración Rápida</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Horario Estándar</label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="text-xs text-gray-500">Hora Inicio</label>
+                                            <input type="time" id="standardStartTime" value="09:00" class="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+                                        </div>
+                                        <div>
+                                            <label class="text-xs text-gray-500">Hora Fin</label>
+                                            <input type="time" id="standardEndTime" value="18:00" class="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Aplicar a Días</label>
+                                    <div class="grid grid-cols-2 gap-2 text-sm">
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="applyMonday" checked class="mr-2">
+                                            Lunes
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="applyTuesday" checked class="mr-2">
+                                            Martes
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="applyWednesday" checked class="mr-2">
+                                            Miércoles
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="applyThursday" checked class="mr-2">
+                                            Jueves
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="applyFriday" checked class="mr-2">
+                                            Viernes
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="applySaturday" class="mr-2">
+                                            Sábado
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="applySunday" class="mr-2">
+                                            Domingo
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <button onclick="applyStandardSchedule()" class="w-full bg-blue-800 hover:bg-blue-900 text-white py-2 rounded-lg">
+                                    Aplicar Horario Estándar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Acciones Rápidas</h3>
+                            <div class="space-y-3">
+                                <button onclick="copyWeekSchedule()" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg text-sm">
+                                    📋 Copiar Esta Semana
+                                </button>
+                                <button onclick="pasteWeekSchedule()" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg text-sm">
+                                    📄 Pegar Semana Copiada
+                                </button>
+                                <button onclick="exportSchedule()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm">
+                                    📥 Exportar Horarios
+                                </button>
+                                <button onclick="importSchedule()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm">
+                                    📤 Importar Horarios
+                                </button>
+                            </div>
+                            
+                            <div class="mt-4 p-3 bg-blue-50 rounded text-sm">
+                                <p class="text-blue-800 font-medium mb-1">💡 Consejos:</p>
+                                <ul class="text-blue-700 text-xs space-y-1">
+                                    <li>• Clic en una celda para cambiar disponibilidad</li>
+                                    <li>• Usa los botones rápidos para configurar toda la semana</li>
+                                    <li>• Las citas existentes aparecen en amarillo</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Control del Sistema -->
+                <div id="adminControl" class="admin-section hidden p-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-8">⚙️ Control del Sistema</h2>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Configuración General -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Configuración General</h3>
+                            <form onsubmit="updateSystemConfig(event)" class="space-y-4">
+                                <div>
+                                    <label for="salonName" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Salón</label>
+                                    <input type="text" id="salonName" value="Onice Estudio" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                </div>
+                                <div>
+                                    <label for="advancePercentage" class="block text-sm font-medium text-gray-700 mb-1">Porcentaje de Adelanto (%)</label>
+                                    <input type="number" id="advancePercentage" value="40" min="0" max="100" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                </div>
+                                <div>
+                                    <label for="timeSlotDuration" class="block text-sm font-medium text-gray-700 mb-1">Duración de Slots (minutos)</label>
+                                    <select id="timeSlotDuration" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                        <option value="30">30 minutos</option>
+                                        <option value="60" selected>60 minutos</option>
+                                        <option value="90">90 minutos</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="maxAdvanceDays" class="block text-sm font-medium text-gray-700 mb-1">Días máximos de anticipación</label>
+                                    <input type="number" id="maxAdvanceDays" value="30" min="7" max="365" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                </div>
+                                <button type="submit" class="w-full bg-blue-800 hover:bg-blue-900 text-white py-2 rounded-lg">
+                                    Guardar Configuración
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Gestión de Datos -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Gestión de Datos</h3>
+                            <div class="space-y-4">
+                                <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                    <h4 class="font-semibold text-yellow-800 mb-2">⚠️ Exportar Datos</h4>
+                                    <p class="text-sm text-yellow-700 mb-3">Descarga una copia de seguridad de todas las citas y configuraciones</p>
+                                    <button onclick="exportData()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded text-sm">
+                                        📥 Exportar Datos
+                                    </button>
+                                </div>
+                                
+                                <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                                    <h4 class="font-semibold text-red-800 mb-2">🗑️ Limpiar Datos</h4>
+                                    <p class="text-sm text-red-700 mb-3">Elimina todas las citas completadas o canceladas</p>
+                                    <button onclick="cleanOldData()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm">
+                                        🧹 Limpiar Datos Antiguos
+                                    </button>
+                                </div>
+
+                                <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
+                                    <h4 class="font-semibold text-green-800 mb-2">📊 Estado del Sistema</h4>
+                                    <div class="text-sm text-green-700 space-y-1">
+                                        <p>Total de citas: <span id="totalAppointmentsCount">0</span></p>
+                                        <p>Servicios activos: <span id="activeServicesCount">0</span></p>
+                                        <p>Última actividad: <span id="lastActivity">-</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notificaciones y Emails -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Configuración de Notificaciones</h3>
+                            <form onsubmit="updateNotificationConfig(event)" class="space-y-4">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="emailNotifications" checked class="mr-3">
+                                    <label for="emailNotifications" class="text-sm text-gray-700">Enviar emails de confirmación</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="smsNotifications" class="mr-3">
+                                    <label for="smsNotifications" class="text-sm text-gray-700">Enviar SMS de recordatorio</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="reminderNotifications" checked class="mr-3">
+                                    <label for="reminderNotifications" class="text-sm text-gray-700">Recordatorios automáticos</label>
+                                </div>
+                                <div>
+                                    <label for="reminderHours" class="block text-sm font-medium text-gray-700 mb-1">Horas antes para recordatorio</label>
+                                    <input type="number" id="reminderHours" value="24" min="1" max="168" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                </div>
+                                <button type="submit" class="w-full bg-blue-800 hover:bg-blue-900 text-white py-2 rounded-lg">
+                                    Guardar Notificaciones
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Seguridad -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Seguridad</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <h4 class="font-semibold text-gray-700 mb-2">Cambiar Contraseña</h4>
+                                    <form onsubmit="changeAdminPassword(event)" class="space-y-3">
+                                        <input type="password" id="currentPassword" placeholder="Contraseña actual" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                        <input type="password" id="newPassword" placeholder="Nueva contraseña" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                        <input type="password" id="confirmPassword" placeholder="Confirmar contraseña" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                        <button type="submit" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg text-sm">
+                                            🔒 Cambiar Contraseña
+                                        </button>
+                                    </form>
+                                </div>
+                                
+                                <div class="pt-4 border-t">
+                                    <h4 class="font-semibold text-gray-700 mb-2">Sesiones Activas</h4>
+                                    <p class="text-sm text-gray-600 mb-2">Sesión actual iniciada: <span id="sessionStartTime">-</span></p>
+                                    <button onclick="logoutAdmin()" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-sm">
+                                        🚪 Cerrar Todas las Sesiones
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reportes -->
+                <div id="adminReports" class="admin-section hidden p-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-8">📈 Reportes y Estadísticas</h2>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <!-- Filtros de Reporte -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Filtros de Reporte</h3>
+                            <form onsubmit="generateReport(event)" class="space-y-4">
+                                <div>
+                                    <label for="reportType" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Reporte</label>
+                                    <select id="reportType" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                        <option value="appointments">Citas por Período</option>
+                                        <option value="services">Servicios Más Solicitados</option>
+                                        <option value="revenue">Ingresos por Período</option>
+                                        <option value="clients">Clientes Frecuentes</option>
+                                    </select>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="reportStartDate" class="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
+                                        <input type="date" id="reportStartDate" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                    </div>
+                                    <div>
+                                        <label for="reportEndDate" class="block text-sm font-medium text-gray-700 mb-1">Fecha Fin</label>
+                                        <input type="date" id="reportEndDate" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-full bg-blue-800 hover:bg-blue-900 text-white py-2 rounded-lg">
+                                    📊 Generar Reporte
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Resumen Rápido -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Resumen Rápido</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center p-3 bg-blue-50 rounded">
+                                    <span class="text-sm text-blue-700">Ingresos del Mes</span>
+                                    <span class="font-bold text-blue-800" id="monthlyRevenue">$0.00</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-green-50 rounded">
+                                    <span class="text-sm text-green-700">Citas Completadas</span>
+                                    <span class="font-bold text-green-800" id="completedAppointments">0</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-purple-50 rounded">
+                                    <span class="text-sm text-purple-700">Tasa de Ocupación</span>
+                                    <span class="font-bold text-purple-800" id="occupancyRate">0%</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-yellow-50 rounded">
+                                    <span class="text-sm text-yellow-700">Clientes Únicos</span>
+                                    <span class="font-bold text-yellow-800" id="uniqueClients">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resultados del Reporte -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Resultados del Reporte</h3>
+                        <div id="reportResults" class="text-center text-gray-500 py-8">
+                            Selecciona los filtros y genera un reporte para ver los resultados aquí
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificaciones -->
+    <div id="notifications" class="fixed top-4 right-4 z-50 space-y-2">
+        <!-- Las notificaciones aparecerán aquí -->
+    </div>
+
+    <script>
+        /* ==================== INICIO JAVASCRIPT ==================== */
+
+        // ===== SISTEMA DE AUTENTICACIÓN ADMIN =====
+        let adminSession = {
+            isLoggedIn: false,
+            username: null,
+            loginTime: null
+        };
+
+        // Credenciales por defecto (en producción esto estaría en el backend)
+        const adminCredentials = {
+            username: 'admin',
+            password: 'salon123'
+        };
+
+        // ===== DATOS DEL SISTEMA =====
+        let services = [
+            { id: 1, name: 'Corte de Cabello', price: 25.00, duration: 45, category: 'Cabello', description: 'Corte profesional personalizado' },
+            { id: 2, name: 'Tinte Completo', price: 60.00, duration: 120, category: 'Cabello', description: 'Coloración completa del cabello' },
+            { id: 3, name: 'Manicure', price: 20.00, duration: 60, category: 'Uñas', description: 'Cuidado completo de uñas' },
+            { id: 4, name: 'Pedicure', price: 25.00, duration: 75, category: 'Uñas', description: 'Cuidado completo de pies' },
+            { id: 5, name: 'Facial Hidratante', price: 45.00, duration: 90, category: 'Facial', description: 'Tratamiento facial hidratante' },
+            { id: 6, name: 'Maquillaje Social', price: 35.00, duration: 60, category: 'Maquillaje', description: 'Maquillaje para eventos' }
+        ];
+
+        let appointments = [];
+        let selectedServices = [];
+        let selectedDate = null;
+        let selectedTime = null;
+        let currentView = 'client';
+
+        // Configuración del sistema
+        let systemConfig = {
+            salonName: 'Onice Estudio',
+            advancePercentage: 40,
+            timeSlotDuration: 60,
+            maxAdvanceDays: 30
+        };
+
+        // ===== SISTEMA DE HORARIOS AVANZADO =====
+        let currentWeekStart = new Date();
+        let copiedWeekSchedule = null;
+
+        // Configuración de horarios por fecha específica
+        let scheduleAvailability = {};
+
+        // Horarios por defecto para generar disponibilidad inicial
+        let defaultBusinessHours = {
+            monday: { start: '09:00', end: '18:00', closed: false },
+            tuesday: { start: '09:00', end: '18:00', closed: false },
+            wednesday: { start: '09:00', end: '18:00', closed: false },
+            thursday: { start: '09:00', end: '18:00', closed: false },
+            friday: { start: '09:00', end: '18:00', closed: false },
+            saturday: { start: '09:00', end: '16:00', closed: false },
+            sunday: { start: '10:00', end: '14:00', closed: true }
+        };
+
+        // Configuración de notificaciones
+        let notificationConfig = {
+            emailNotifications: true,
+            smsNotifications: false,
+            reminderNotifications: true,
+            reminderHours: 24
+        };
+
+        // ===== INICIALIZACIÓN =====
+        document.addEventListener('DOMContentLoaded', function() {
+            loadServices();
+            generateCalendar();
+            updateAdminDashboard();
+            updateSystemStats();
+            initializeCurrentWeek();
+            
+            // Verificar si hay parámetro admin en la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('admin') === 'true') {
+                showAdminLogin();
+            }
+        });
+
+        // ===== FUNCIONES DE AUTENTICACIÓN =====
+        function showAdminLogin() {
+            document.getElementById('adminLoginModal').classList.remove('hidden');
+            document.getElementById('adminUsername').focus();
+        }
+
+        function hideAdminLogin() {
+            document.getElementById('adminLoginModal').classList.add('hidden');
+            document.getElementById('adminLoginForm').reset();
+        }
+
+        function handleAdminLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+            
+            // Validar credenciales
+            if (username === adminCredentials.username && password === adminCredentials.password) {
+                // Login exitoso
+                adminSession.isLoggedIn = true;
+                adminSession.username = username;
+                adminSession.loginTime = new Date();
+                
+                // Actualizar UI
+                document.getElementById('adminUserDisplay').textContent = username;
+                document.getElementById('sessionStartTime').textContent = adminSession.loginTime.toLocaleString('es-ES');
+                
+                // Cambiar a vista admin
+                hideAdminLogin();
+                switchToAdmin();
+                
+                showNotification('¡Bienvenido al panel de administración!', 'success');
+            } else {
+                // Login fallido
+                showNotification('Credenciales incorrectas. Intenta de nuevo.', 'error');
+                document.getElementById('adminPassword').value = '';
+                document.getElementById('adminPassword').focus();
+            }
+        }
+
+        function logoutAdmin() {
+            // Crear modal de confirmación personalizado
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Cerrar Sesión</h3>
+                    <p class="text-gray-600 mb-6">¿Estás seguro de que quieres cerrar la sesión?</p>
+                    <div class="flex space-x-4">
+                        <button onclick="confirmLogout()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg">
+                            Sí, Cerrar Sesión
+                        </button>
+                        <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function confirmLogout() {
+            adminSession.isLoggedIn = false;
+            adminSession.username = null;
+            adminSession.loginTime = null;
+            
+            // Volver a vista cliente
+            switchToClient();
+            
+            showNotification('Sesión cerrada correctamente', 'info');
+            
+            // Remover modal
+            document.querySelector('.fixed.inset-0').remove();
+        }
+
+        function changeAdminPassword(event) {
+            event.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validar contraseña actual
+            if (currentPassword !== adminCredentials.password) {
+                showNotification('La contraseña actual es incorrecta', 'error');
+                return;
+            }
+            
+            // Validar nueva contraseña
+            if (newPassword.length < 6) {
+                showNotification('La nueva contraseña debe tener al menos 6 caracteres', 'error');
+                return;
+            }
+            
+            // Validar confirmación
+            if (newPassword !== confirmPassword) {
+                showNotification('Las contraseñas no coinciden', 'error');
+                return;
+            }
+            
+            // Cambiar contraseña
+            adminCredentials.password = newPassword;
+            
+            // Limpiar formulario
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            
+            showNotification('Contraseña cambiada exitosamente', 'success');
+        }
+
+        // ===== FUNCIONES DE VISTA =====
+        function switchToAdmin() {
+            if (!adminSession.isLoggedIn) {
+                showAdminLogin();
+                return;
+            }
+            
+            document.getElementById('clientView').classList.add('hidden');
+            document.getElementById('adminView').classList.remove('hidden');
+            currentView = 'admin';
+            updateAdminDashboard();
+            updateSystemStats();
+        }
+
+        function switchToClient() {
+            document.getElementById('adminView').classList.add('hidden');
+            document.getElementById('clientView').classList.remove('hidden');
+            currentView = 'client';
+        }
+
+        function showAdminSection(sectionName) {
+            document.querySelectorAll('.admin-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById('admin' + sectionName.charAt(0).toUpperCase() + sectionName.slice(1)).classList.remove('hidden');
+            
+            document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+                btn.classList.remove('bg-gray-700');
+            });
+            event.target.classList.add('bg-gray-700');
+
+            if (sectionName === 'appointments') {
+                renderAppointments();
+            } else if (sectionName === 'services') {
+                renderAdminServices();
+            } else if (sectionName === 'schedule') {
+                generateAdminCalendar();
+            } else if (sectionName === 'control') {
+                updateSystemStats();
+            } else if (sectionName === 'reports') {
+                updateReportSummary();
+            }
+        }
+
+        // ===== FUNCIONES DE MÉTODOS DE PAGO =====
+        function handlePaymentMethodChange() {
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            const referenceField = document.getElementById('referenceField');
+            const transferReference = document.getElementById('transferReference');
+            
+            if (paymentMethod === 'transferencia') {
+                referenceField.classList.add('show');
+                transferReference.required = true;
+            } else {
+                referenceField.classList.remove('show');
+                transferReference.required = false;
+                transferReference.value = '';
+            }
+        }
+
+        // ===== FUNCIONES DE SERVICIOS =====
+        function loadServices() {
+            const servicesList = document.getElementById('servicesList');
+            servicesList.innerHTML = services.map(service => `
+                <div class="service-card bg-white border border-gray-200 rounded-lg p-4 cursor-pointer" onclick="toggleService(${service.id})">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-semibold text-gray-800">${service.name}</h3>
+                        <span class="text-blue-800 font-bold">$${service.price.toFixed(2)}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-2">${service.description}</p>
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>${service.category}</span>
+                        <span>${service.duration} min</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleService(serviceId) {
+            const service = services.find(s => s.id === serviceId);
+            const serviceCard = event.currentTarget;
+            
+            if (selectedServices.find(s => s.id === serviceId)) {
+                // Remover servicio
+                selectedServices = selectedServices.filter(s => s.id !== serviceId);
+                serviceCard.classList.remove('selected-service');
+            } else {
+                // Agregar servicio
+                selectedServices.push(service);
+                serviceCard.classList.add('selected-service');
+            }
+            
+            updateSelectedServices();
+        }
+
+        function updateSelectedServices() {
+            const selectedDiv = document.getElementById('selectedServices');
+            const totalPriceSpan = document.getElementById('totalPrice');
+            const totalAmountSpan = document.getElementById('totalAmount');
+            const advanceAmountSpan = document.getElementById('advanceAmount');
+            
+            if (selectedServices.length === 0) {
+                selectedDiv.textContent = 'Ningún servicio seleccionado';
+                totalPriceSpan.textContent = '0.00';
+                totalAmountSpan.textContent = '0.00';
+                advanceAmountSpan.textContent = '0.00';
+                return;
+            }
+            
+            const total = selectedServices.reduce((sum, service) => sum + service.price, 0);
+            const advance = total * (systemConfig.advancePercentage / 100);
+            
+            selectedDiv.innerHTML = selectedServices.map(service => 
+                `<div class="flex justify-between">
+                    <span>${service.name}</span>
+                    <span>$${service.price.toFixed(2)}</span>
+                </div>`
+            ).join('');
+            
+            totalPriceSpan.textContent = total.toFixed(2);
+            totalAmountSpan.textContent = total.toFixed(2);
+            advanceAmountSpan.textContent = advance.toFixed(2);
+        }
+
+        // ===== FUNCIONES DE CALENDARIO CLIENTE =====
+        function generateCalendar() {
+            const calendar = document.getElementById('calendar');
+            const today = new Date();
+            
+            // Generar próximos días según configuración
+            let calendarHTML = '<div class="grid grid-cols-7 gap-1 text-center">';
+            calendarHTML += '<div class="font-semibold text-gray-600 py-2">Dom</div>';
+            calendarHTML += '<div class="font-semibold text-gray-600 py-2">Lun</div>';
+            calendarHTML += '<div class="font-semibold text-gray-600 py-2">Mar</div>';
+            calendarHTML += '<div class="font-semibold text-gray-600 py-2">Mié</div>';
+            calendarHTML += '<div class="font-semibold text-gray-600 py-2">Jue</div>';
+            calendarHTML += '<div class="font-semibold text-gray-600 py-2">Vie</div>';
+            calendarHTML += '<div class="font-semibold text-gray-600 py-2">Sáb</div>';
+            
+            for (let i = 0; i < systemConfig.maxAdvanceDays; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                
+                const dateStr = date.toISOString().split('T')[0];
+                const isAvailable = isDateAvailable(dateStr);
+                
+                calendarHTML += `
+                    <div class="calendar-day p-2 rounded cursor-pointer ${isAvailable ? 'hover:bg-blue-100' : 'bg-gray-100 cursor-not-allowed text-gray-400'}" 
+                         onclick="${isAvailable ? `selectDate('${dateStr}')` : ''}" 
+                         data-date="${dateStr}">
+                        ${date.getDate()}
+                    </div>
+                `;
+            }
+            
+            calendarHTML += '</div>';
+            calendar.innerHTML = calendarHTML;
+        }
+
+        function isDateAvailable(dateStr) {
+            const date = new Date(dateStr);
+            const dayName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][date.getDay()];
+            
+            // Verificar si hay configuración específica para esta fecha
+            if (scheduleAvailability[dateStr]) {
+                return Object.values(scheduleAvailability[dateStr]).some(slot => slot === true);
+            }
+            
+            // Usar configuración por defecto
+            return !defaultBusinessHours[dayName].closed;
+        }
+
+        function selectDate(dateStr) {
+            // Remover selección anterior
+            document.querySelectorAll('.calendar-day').forEach(day => {
+                day.classList.remove('selected');
+            });
+            
+            // Seleccionar nueva fecha
+            const dayElement = document.querySelector(`[data-date="${dateStr}"]`);
+            dayElement.classList.add('selected');
+            
+            selectedDate = dateStr;
+            generateTimeSlots(dateStr);
+        }
+
+        function generateTimeSlots(dateStr) {
+            const timeSlotsDiv = document.getElementById('timeSlots');
+            const availableSlots = getAvailableTimeSlotsForDate(dateStr);
+            
+            if (availableSlots.length === 0) {
+                timeSlotsDiv.innerHTML = '<p class="col-span-2 text-gray-500 text-center py-4">No hay horarios disponibles</p>';
+                return;
+            }
+            
+            timeSlotsDiv.innerHTML = availableSlots.map(slot => {
+                const isOccupied = isTimeSlotOccupied(dateStr, slot);
+                return `
+                    <button class="time-slot p-2 rounded border text-sm ${isOccupied ? 'occupied' : 'hover:bg-blue-100'}" 
+                            onclick="${isOccupied ? '' : `selectTime('${slot}')`}"
+                            ${isOccupied ? 'disabled' : ''}>
+                        ${slot}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function getAvailableTimeSlotsForDate(dateStr) {
+            const date = new Date(dateStr);
+            const dayName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][date.getDay()];
+            
+            // Si hay configuración específica para esta fecha, usarla
+            if (scheduleAvailability[dateStr]) {
+                return Object.keys(scheduleAvailability[dateStr])
+                    .filter(time => scheduleAvailability[dateStr][time] === true)
+                    .sort();
+            }
+            
+            // Usar configuración por defecto
+            const hours = defaultBusinessHours[dayName];
+            if (hours.closed) {
+                return [];
+            }
+            
+            return generateTimeSlotArray(hours.start, hours.end, systemConfig.timeSlotDuration);
+        }
+
+        function generateTimeSlotArray(start, end, intervalMinutes) {
+            const slots = [];
+            const startTime = new Date(`2000-01-01T${start}:00`);
+            const endTime = new Date(`2000-01-01T${end}:00`);
+            
+            let currentTime = new Date(startTime);
+            while (currentTime < endTime) {
+                slots.push(currentTime.toTimeString().slice(0, 5));
+                currentTime.setMinutes(currentTime.getMinutes() + intervalMinutes);
+            }
+            
+            return slots;
+        }
+
+        function isTimeSlotOccupied(date, time) {
+            return appointments.some(apt => 
+                apt.date === date && 
+                apt.time === time && 
+                apt.status !== 'cancelled'
+            );
+        }
+
+        function selectTime(time) {
+            // Remover selección anterior
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('selected');
+            });
+            
+            // Seleccionar nuevo horario
+            event.target.classList.add('selected');
+            selectedTime = time;
+        }
+
+        // ===== FUNCIONES DE CALENDARIO ADMIN =====
+        function initializeCurrentWeek() {
+            const today = new Date();
+            currentWeekStart = new Date(today);
+            currentWeekStart.setDate(today.getDate() - today.getDay()); // Ir al domingo de esta semana
+            currentWeekStart.setHours(0, 0, 0, 0);
+        }
+
+        function generateAdminCalendar() {
+            updateWeekDisplay();
+            const grid = document.getElementById('adminCalendarGrid');
+            
+            // Generar horarios (cada hora de 8:00 a 20:00)
+            const timeSlots = [];
+            for (let hour = 8; hour <= 20; hour++) {
+                timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
+            }
+            
+            // Generar fechas de la semana
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentWeekStart);
+                date.setDate(currentWeekStart.getDate() + i);
+                weekDates.push(date);
+            }
+            
+            let gridHTML = '';
+            
+            // Header con días de la semana
+            gridHTML += '<div class="admin-calendar-header">Hora</div>';
+            weekDates.forEach(date => {
+                const dayName = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][date.getDay()];
+                const dayNumber = date.getDate();
+                const monthName = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'][date.getMonth()];
+                gridHTML += `<div class="admin-calendar-header">${dayName}<br>${dayNumber} ${monthName}</div>`;
+            });
+            
+            // Celdas de horarios
+            timeSlots.forEach(time => {
+                gridHTML += `<div class="admin-calendar-time">${time}</div>`;
+                
+                weekDates.forEach(date => {
+                    const dateStr = date.toISOString().split('T')[0];
+                    const cellKey = `${dateStr}_${time}`;
+                    const isOccupied = isTimeSlotOccupied(dateStr, time);
+                    const isAvailable = getSlotAvailability(dateStr, time);
+                    
+                    let cellClass = 'admin-calendar-cell';
+                    if (isOccupied) {
+                        cellClass += ' occupied';
+                    } else if (isAvailable) {
+                        cellClass += ' available';
+                    } else {
+                        cellClass += ' unavailable';
+                    }
+                    
+                    gridHTML += `<div class="${cellClass}" onclick="toggleSlotAvailability('${dateStr}', '${time}')" data-date="${dateStr}" data-time="${time}"></div>`;
+                });
+            });
+            
+            grid.innerHTML = gridHTML;
+        }
+
+        function getSlotAvailability(dateStr, time) {
+            // Si hay configuración específica, usarla
+            if (scheduleAvailability[dateStr] && scheduleAvailability[dateStr].hasOwnProperty(time)) {
+                return scheduleAvailability[dateStr][time];
+            }
+            
+            // Usar configuración por defecto
+            const date = new Date(dateStr);
+            const dayName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][date.getDay()];
+            const dayConfig = defaultBusinessHours[dayName];
+            
+            if (dayConfig.closed) {
+                return false;
+            }
+            
+            const timeNum = parseInt(time.replace(':', ''));
+            const startNum = parseInt(dayConfig.start.replace(':', ''));
+            const endNum = parseInt(dayConfig.end.replace(':', ''));
+            
+            return timeNum >= startNum && timeNum < endNum;
+        }
+
+        function toggleSlotAvailability(dateStr, time) {
+            // No permitir cambiar slots ocupados
+            if (isTimeSlotOccupied(dateStr, time)) {
+                showNotification('No puedes modificar un horario que ya tiene una cita', 'error');
+                return;
+            }
+            
+            // Inicializar fecha si no existe
+            if (!scheduleAvailability[dateStr]) {
+                scheduleAvailability[dateStr] = {};
+            }
+            
+            // Cambiar disponibilidad
+            const currentAvailability = getSlotAvailability(dateStr, time);
+            scheduleAvailability[dateStr][time] = !currentAvailability;
+            
+            // Actualizar visual
+            const cell = document.querySelector(`[data-date="${dateStr}"][data-time="${time}"]`);
+            if (cell) {
+                cell.classList.remove('available', 'unavailable');
+                cell.classList.add(scheduleAvailability[dateStr][time] ? 'available' : 'unavailable');
+            }
+            
+            // Regenerar calendario cliente si está visible
+            if (currentView === 'client') {
+                generateCalendar();
+            }
+        }
+
+        function updateWeekDisplay() {
+            const endDate = new Date(currentWeekStart);
+            endDate.setDate(currentWeekStart.getDate() + 6);
+            
+            const startStr = `${currentWeekStart.getDate()} ${['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'][currentWeekStart.getMonth()]}`;
+            const endStr = `${endDate.getDate()} ${['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'][endDate.getMonth()]} ${endDate.getFullYear()}`;
+            
+            document.getElementById('currentWeekDisplay').textContent = `${startStr} - ${endStr}`;
+        }
+
+        function changeWeek(direction) {
+            currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+            generateAdminCalendar();
+        }
+
+        function setAllWeekAvailable(available) {
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentWeekStart);
+                date.setDate(currentWeekStart.getDate() + i);
+                weekDates.push(date.toISOString().split('T')[0]);
+            }
+            
+            const timeSlots = [];
+            for (let hour = 8; hour <= 20; hour++) {
+                timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
+            }
+            
+            weekDates.forEach(dateStr => {
+                if (!scheduleAvailability[dateStr]) {
+                    scheduleAvailability[dateStr] = {};
+                }
+                
+                timeSlots.forEach(time => {
+                    if (!isTimeSlotOccupied(dateStr, time)) {
+                        scheduleAvailability[dateStr][time] = available;
+                    }
+                });
+            });
+            
+            generateAdminCalendar();
+            showNotification(`Semana ${available ? 'habilitada' : 'deshabilitada'} completamente`, 'success');
+        }
+
+        function resetWeekToDefault() {
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentWeekStart);
+                date.setDate(currentWeekStart.getDate() + i);
+                weekDates.push(date.toISOString().split('T')[0]);
+            }
+            
+            weekDates.forEach(dateStr => {
+                if (scheduleAvailability[dateStr]) {
+                    delete scheduleAvailability[dateStr];
+                }
+            });
+            
+            generateAdminCalendar();
+            showNotification('Semana restaurada a configuración por defecto', 'success');
+        }
+
+        function applyStandardSchedule() {
+            const startTime = document.getElementById('standardStartTime').value;
+            const endTime = document.getElementById('standardEndTime').value;
+            
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            const applyDays = days.filter(day => document.getElementById(`apply${day.charAt(0).toUpperCase() + day.slice(1)}`).checked);
+            
+            if (applyDays.length === 0) {
+                showNotification('Selecciona al menos un día para aplicar', 'error');
+                return;
+            }
+            
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentWeekStart);
+                date.setDate(currentWeekStart.getDate() + i);
+                weekDates.push({
+                    date: date.toISOString().split('T')[0],
+                    dayName: days[date.getDay()]
+                });
+            }
+            
+            const timeSlots = generateTimeSlotArray(startTime, endTime, systemConfig.timeSlotDuration);
+            
+            weekDates.forEach(({date: dateStr, dayName}) => {
+                if (applyDays.includes(dayName)) {
+                    if (!scheduleAvailability[dateStr]) {
+                        scheduleAvailability[dateStr] = {};
+                    }
+                    
+                    // Limpiar horarios existentes para este día
+                    Object.keys(scheduleAvailability[dateStr]).forEach(time => {
+                        if (!isTimeSlotOccupied(dateStr, time)) {
+                            scheduleAvailability[dateStr][time] = false;
+                        }
+                    });
+                    
+                    // Aplicar nuevos horarios
+                    timeSlots.forEach(time => {
+                        if (!isTimeSlotOccupied(dateStr, time)) {
+                            scheduleAvailability[dateStr][time] = true;
+                        }
+                    });
+                }
+            });
+            
+            generateAdminCalendar();
+            showNotification(`Horario estándar aplicado a ${applyDays.length} días`, 'success');
+        }
+
+        function copyWeekSchedule() {
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentWeekStart);
+                date.setDate(currentWeekStart.getDate() + i);
+                weekDates.push(date.toISOString().split('T')[0]);
+            }
+            
+            copiedWeekSchedule = {};
+            weekDates.forEach((dateStr, index) => {
+                const dayName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][index];
+                copiedWeekSchedule[dayName] = scheduleAvailability[dateStr] || {};
+            });
+            
+            showNotification('Horarios de la semana copiados', 'success');
+        }
+
+        function pasteWeekSchedule() {
+            if (!copiedWeekSchedule) {
+                showNotification('No hay horarios copiados para pegar', 'error');
+                return;
+            }
+            
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentWeekStart);
+                date.setDate(currentWeekStart.getDate() + i);
+                weekDates.push({
+                    date: date.toISOString().split('T')[0],
+                    dayName: ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][i]
+                });
+            }
+            
+            weekDates.forEach(({date: dateStr, dayName}) => {
+                if (copiedWeekSchedule[dayName]) {
+                    scheduleAvailability[dateStr] = {...copiedWeekSchedule[dayName]};
+                }
+            });
+            
+            generateAdminCalendar();
+            showNotification('Horarios pegados exitosamente', 'success');
+        }
+
+        function exportSchedule() {
+            const data = {
+                scheduleAvailability: scheduleAvailability,
+                defaultBusinessHours: defaultBusinessHours,
+                systemConfig: systemConfig,
+                exportDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `horarios-onice-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            showNotification('Horarios exportados exitosamente', 'success');
+        }
+
+        function importSchedule() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            if (data.scheduleAvailability) {
+                                scheduleAvailability = data.scheduleAvailability;
+                                generateAdminCalendar();
+                                showNotification('Horarios importados exitosamente', 'success');
+                            } else {
+                                showNotification('Archivo de horarios inválido', 'error');
+                            }
+                        } catch (error) {
+                            showNotification('Error al leer el archivo', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        // ===== FUNCIÓN DE RESERVA =====
+        function submitReservation(event) {
+            event.preventDefault();
+            
+            // Validaciones
+            if (selectedServices.length === 0) {
+                showNotification('Por favor selecciona al menos un servicio', 'error');
+                return;
+            }
+            
+            if (!selectedDate) {
+                showNotification('Por favor selecciona una fecha', 'error');
+                return;
+            }
+            
+            if (!selectedTime) {
+                showNotification('Por favor selecciona un horario', 'error');
+                return;
+            }
+
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            if (paymentMethod === 'transferencia') {
+                const reference = document.getElementById('transferReference').value;
+                if (!reference.trim()) {
+                    showNotification('Por favor ingresa el número de referencia de la transferencia', 'error');
+                    return;
+                }
+            }
+            
+            // Crear cita
+            const total = selectedServices.reduce((sum, service) => sum + service.price, 0);
+            const advance = total * (systemConfig.advancePercentage / 100);
+            
+            const appointment = {
+                id: Date.now(),
+                clientName: document.getElementById('clientName').value,
+                clientPhone: document.getElementById('clientPhone').value,
+                clientEmail: document.getElementById('clientEmail').value,
+                services: [...selectedServices],
+                date: selectedDate,
+                time: selectedTime,
+                description: document.getElementById('description').value,
+                paymentMethod: paymentMethod,
+                transferReference: paymentMethod === 'transferencia' ? document.getElementById('transferReference').value : null,
+                total: total,
+                advance: advance,
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            };
+            
+            appointments.push(appointment);
+            
+            // Simular envío de email
+            if (notificationConfig.emailNotifications) {
+                sendConfirmationEmail(appointment);
+            }
+            
+            // Mostrar confirmación
+            showNotification('¡Cita reservada exitosamente! Te hemos enviado un email de confirmación.', 'success');
+            
+            // Limpiar formulario
+            resetForm();
+            
+            // Actualizar dashboard si estamos en vista admin
+            if (currentView === 'admin') {
+                updateAdminDashboard();
+                updateSystemStats();
+            }
+        }
+
+        function sendConfirmationEmail(appointment) {
+            // Simular envío de email
+            console.log('📧 Email enviado a:', appointment.clientEmail);
+            console.log('Contenido del email:');
+            console.log(`
+                Estimado/a ${appointment.clientName},
+                
+                Su cita ha sido registrada exitosamente en ${systemConfig.salonName}:
+                
+                📅 Fecha: ${new Date(appointment.date).toLocaleDateString('es-ES')}
+                ⏰ Hora: ${appointment.time}
+                💅 Servicios: ${appointment.services.map(s => s.name).join(', ')}
+                💰 Total: $${appointment.total.toFixed(2)}
+                💳 Adelanto pagado: $${appointment.advance.toFixed(2)}
+                💳 Método de pago: ${appointment.paymentMethod}
+                ${appointment.transferReference ? `📝 Referencia: ${appointment.transferReference}` : ''}
+                📝 Comentarios: ${appointment.description || 'Ninguno'}
+                
+                Estado: Pendiente de confirmación
+                
+                Nos pondremos en contacto contigo pronto para confirmar tu cita.
+                
+                ¡Gracias por elegirnos!
+                ${systemConfig.salonName}
+            `);
+        }
+
+        function resetForm() {
+            document.getElementById('reservationForm').reset();
+            selectedServices = [];
+            selectedDate = null;
+            selectedTime = null;
+            
+            // Limpiar selecciones visuales
+            document.querySelectorAll('.service-card').forEach(card => {
+                card.classList.remove('selected-service');
+            });
+            document.querySelectorAll('.calendar-day').forEach(day => {
+                day.classList.remove('selected');
+            });
+            document.getElementById('timeSlots').innerHTML = '<p class="col-span-2 text-gray-500 text-center py-4">Selecciona una fecha primero</p>';
+            
+            // Ocultar campo de referencia
+            document.getElementById('referenceField').classList.remove('show');
+            document.getElementById('transferReference').required = false;
+            
+            updateSelectedServices();
+        }
+
+        // ===== FUNCIONES DE ADMINISTRACIÓN =====
+        function updateAdminDashboard() {
+            const today = new Date().toISOString().split('T')[0];
+            const thisWeekStart = new Date();
+            thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
+            const thisMonthStart = new Date();
+            thisMonthStart.setDate(1);
+            
+            const todayCount = appointments.filter(apt => apt.date === today).length;
+            const weekCount = appointments.filter(apt => new Date(apt.date) >= thisWeekStart).length;
+            const monthCount = appointments.filter(apt => new Date(apt.date) >= thisMonthStart).length;
+            const pendingCount = appointments.filter(apt => apt.status === 'pending').length;
+            
+            document.getElementById('todayAppointments').textContent = todayCount;
+            document.getElementById('weekAppointments').textContent = weekCount;
+            document.getElementById('monthAppointments').textContent = monthCount;
+            document.getElementById('pendingAppointments').textContent = pendingCount;
+            
+            // Citas recientes
+            const recentDiv = document.getElementById('recentAppointments');
+            const recentAppointments = appointments.slice(-5).reverse();
+            
+            if (recentAppointments.length === 0) {
+                recentDiv.innerHTML = '<p class="text-gray-500 text-sm">No hay citas recientes</p>';
+            } else {
+                recentDiv.innerHTML = recentAppointments.map(apt => `
+                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                        <div>
+                            <p class="font-medium">${apt.clientName}</p>
+                            <p class="text-sm text-gray-600">${new Date(apt.date).toLocaleDateString('es-ES')} - ${apt.time}</p>
+                        </div>
+                        <span class="text-sm px-2 py-1 rounded ${getStatusClass(apt.status)}">${getStatusText(apt.status)}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderAppointments() {
+            const tbody = document.getElementById('appointmentsList');
+            const filter = document.getElementById('appointmentFilter').value;
+            
+            let filteredAppointments = appointments;
+            if (filter !== 'all') {
+                filteredAppointments = appointments.filter(apt => apt.status === filter);
+            }
+            
+            if (filteredAppointments.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No hay citas que coincidan con el filtro</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filteredAppointments.map(apt => `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="font-medium text-gray-900">${apt.clientName}</div>
+                        <div class="text-sm text-gray-500">${apt.clientEmail}</div>
+                        <div class="text-sm text-gray-500">${apt.clientPhone}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${new Date(apt.date).toLocaleDateString('es-ES')}</div>
+                        <div class="text-sm text-gray-500">${apt.time}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-900">${apt.services.map(s => s.name).join(', ')}</div>
+                        ${apt.description ? `<div class="text-sm text-gray-500 mt-1">${apt.description}</div>` : ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">$${apt.total.toFixed(2)}</div>
+                        <div class="text-sm text-gray-500">Adelanto: $${apt.advance.toFixed(2)}</div>
+                        <div class="text-sm text-gray-500">${apt.paymentMethod}</div>
+                        ${apt.transferReference ? `<div class="text-xs text-gray-400">Ref: ${apt.transferReference}</div>` : ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${getStatusClass(apt.status)}">${getStatusText(apt.status)}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        ${apt.status === 'pending' ? `<button onclick="confirmAppointment(${apt.id})" class="text-green-600 hover:text-green-900">Confirmar</button>` : ''}
+                        <button onclick="viewAppointmentDetails(${apt.id})" class="text-blue-600 hover:text-blue-900">Ver</button>
+                        <button onclick="cancelAppointment(${apt.id})" class="text-red-600 hover:text-red-900">Cancelar</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getStatusClass(status) {
+            const classes = {
+                'pending': 'bg-yellow-100 text-yellow-800',
+                'confirmed': 'bg-green-100 text-green-800',
+                'completed': 'bg-blue-100 text-blue-800',
+                'cancelled': 'bg-red-100 text-red-800'
+            };
+            return classes[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        function getStatusText(status) {
+            const texts = {
+                'pending': 'Pendiente',
+                'confirmed': 'Confirmada',
+                'completed': 'Completada',
+                'cancelled': 'Cancelada'
+            };
+            return texts[status] || status;
+        }
+
+        function confirmAppointment(id) {
+            const appointment = appointments.find(apt => apt.id === id);
+            if (appointment) {
+                appointment.status = 'confirmed';
+                showNotification(`Cita de ${appointment.clientName} confirmada`, 'success');
+                renderAppointments();
+                updateAdminDashboard();
+                
+                // Simular envío de email de confirmación
+                if (notificationConfig.emailNotifications) {
+                    console.log(`📧 Email de confirmación enviado a ${appointment.clientEmail}`);
+                }
+            }
+        }
+
+        function cancelAppointment(id) {
+            const appointment = appointments.find(apt => apt.id === id);
+            if (appointment) {
+                // Crear modal de confirmación personalizado
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Cancelar Cita</h3>
+                        <p class="text-gray-600 mb-6">¿Estás seguro de que quieres cancelar la cita de ${appointment.clientName}?</p>
+                        <div class="flex space-x-4">
+                            <button onclick="confirmCancel(${id})" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg">
+                                Sí, Cancelar
+                            </button>
+                            <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg">
+                                No, Mantener
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+        }
+
+        function confirmCancel(id) {
+            const appointment = appointments.find(apt => apt.id === id);
+            if (appointment) {
+                appointment.status = 'cancelled';
+                showNotification(`Cita de ${appointment.clientName} cancelada`, 'info');
+                renderAppointments();
+                updateAdminDashboard();
+                
+                // Remover modal
+                document.querySelector('.fixed.inset-0').remove();
+            }
+        }
+
+        function viewAppointmentDetails(id) {
+            const appointment = appointments.find(apt => apt.id === id);
+            if (appointment) {
+                // Crear modal de detalles
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg p-6 max-w-lg w-full mx-4 max-h-96 overflow-y-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800">Detalles de la Cita</h3>
+                            <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700">✕</button>
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <div><strong>Cliente:</strong> ${appointment.clientName}</div>
+                            <div><strong>Email:</strong> ${appointment.clientEmail}</div>
+                            <div><strong>Teléfono:</strong> ${appointment.clientPhone}</div>
+                            <div><strong>Fecha:</strong> ${new Date(appointment.date).toLocaleDateString('es-ES')}</div>
+                            <div><strong>Hora:</strong> ${appointment.time}</div>
+                            <div><strong>Servicios:</strong> ${appointment.services.map(s => `${s.name} ($${s.price})`).join(', ')}</div>
+                            <div><strong>Total:</strong> $${appointment.total.toFixed(2)}</div>
+                            <div><strong>Adelanto:</strong> $${appointment.advance.toFixed(2)}</div>
+                            <div><strong>Comentarios:</strong> ${appointment.description || 'Ninguno'}</div>
+                            <div><strong>Estado:</strong> <span class="px-2 py-1 rounded ${getStatusClass(appointment.status)}">${getStatusText(appointment.status)}</span></div>
+                            <div><strong>Método de pago:</strong> ${appointment.paymentMethod}</div>
+                            ${appointment.transferReference ? `<div><strong>Referencia:</strong> ${appointment.transferReference}</div>` : ''}
+                            <div><strong>Creada:</strong> ${new Date(appointment.createdAt).toLocaleString('es-ES')}</div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+        }
+
+        function filterAppointments() {
+            renderAppointments();
+        }
+
+        // ===== FUNCIONES DE SERVICIOS ADMIN =====
+        function showAddServiceForm() {
+            document.getElementById('addServiceForm').classList.remove('hidden');
+        }
+
+        function hideAddServiceForm() {
+            document.getElementById('addServiceForm').classList.add('hidden');
+            document.getElementById('addServiceForm').querySelector('form').reset();
+        }
+
+        function addService(event) {
+            event.preventDefault();
+            
+            const service = {
+                id: Date.now(),
+                name: document.getElementById('serviceName').value,
+                price: parseFloat(document.getElementById('servicePrice').value),
+                duration: parseInt(document.getElementById('serviceDuration').value),
+                category: document.getElementById('serviceCategory').value,
+                description: document.getElementById('serviceDescription').value
+            };
+            
+            services.push(service);
+            showNotification('Servicio agregado exitosamente', 'success');
+            hideAddServiceForm();
+            renderAdminServices();
+            loadServices(); // Actualizar vista cliente
+            updateSystemStats();
+        }
+
+        function renderAdminServices() {
+            const tbody = document.getElementById('adminServicesList');
+            
+            tbody.innerHTML = services.map(service => `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="font-medium text-gray-900">${service.name}</div>
+                        <div class="text-sm text-gray-500">${service.description}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">${service.category}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">$${service.price.toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">${service.duration} min</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editService(${service.id})" class="text-blue-600 hover:text-blue-900 mr-3">Editar</button>
+                        <button onclick="deleteService(${service.id})" class="text-red-600 hover:text-red-900">Eliminar</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function deleteService(id) {
+            // Crear modal de confirmación
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Eliminar Servicio</h3>
+                    <p class="text-gray-600 mb-6">¿Estás seguro de que quieres eliminar este servicio?</p>
+                    <div class="flex space-x-4">
+                        <button onclick="confirmDeleteService(${id})" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg">
+                            Sí, Eliminar
+                        </button>
+                        <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function confirmDeleteService(id) {
+            services = services.filter(s => s.id !== id);
+            showNotification('Servicio eliminado', 'info');
+            renderAdminServices();
+            loadServices();
+            updateSystemStats();
+            
+            // Remover modal
+            document.querySelector('.fixed.inset-0').remove();
+        }
+
+        function editService(id) {
+            const service = services.find(s => s.id === id);
+            if (service) {
+                // Crear modal de edición
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Editar Servicio</h3>
+                        <form onsubmit="updateService(event, ${id})" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                                <input type="text" id="editServiceName" value="${service.name}" required class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Precio ($)</label>
+                                <input type="number" id="editServicePrice" value="${service.price}" required min="0" step="0.01" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Duración (min)</label>
+                                <input type="number" id="editServiceDuration" value="${service.duration}" required min="15" step="15" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                                <textarea id="editServiceDescription" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2">${service.description}</textarea>
+                            </div>
+                            <div class="flex space-x-4">
+                                <button type="submit" class="flex-1 bg-blue-800 hover:bg-blue-900 text-white py-2 rounded-lg">
+                                    Guardar Cambios
+                                </button>
+                                <button type="button" onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+        }
+
+        function updateService(event, id) {
+            event.preventDefault();
+            
+            const service = services.find(s => s.id === id);
+            if (service) {
+                service.name = document.getElementById('editServiceName').value;
+                service.price = parseFloat(document.getElementById('editServicePrice').value);
+                service.duration = parseInt(document.getElementById('editServiceDuration').value);
+                service.description = document.getElementById('editServiceDescription').value;
+                
+                showNotification('Servicio actualizado exitosamente', 'success');
+                renderAdminServices();
+                loadServices();
+                
+                // Remover modal
+                document.querySelector('.fixed.inset-0').remove();
+            }
+        }
+
+        // ===== FUNCIONES DE CONTROL DEL SISTEMA =====
+        function updateSystemConfig(event) {
+            event.preventDefault();
+            
+            systemConfig.salonName = document.getElementById('salonName').value;
+            systemConfig.advancePercentage = parseInt(document.getElementById('advancePercentage').value);
+            systemConfig.timeSlotDuration = parseInt(document.getElementById('timeSlotDuration').value);
+            systemConfig.maxAdvanceDays = parseInt(document.getElementById('maxAdvanceDays').value);
+            
+            showNotification('Configuración del sistema actualizada', 'success');
+            
+            // Regenerar elementos que dependen de la configuración
+            generateCalendar();
+            updateSelectedServices();
+        }
+
+        function updateNotificationConfig(event) {
+            event.preventDefault();
+            
+            notificationConfig.emailNotifications = document.getElementById('emailNotifications').checked;
+            notificationConfig.smsNotifications = document.getElementById('smsNotifications').checked;
+            notificationConfig.reminderNotifications = document.getElementById('reminderNotifications').checked;
+            notificationConfig.reminderHours = parseInt(document.getElementById('reminderHours').value);
+            
+            showNotification('Configuración de notificaciones actualizada', 'success');
+        }
+
+        function updateSystemStats() {
+            document.getElementById('totalAppointmentsCount').textContent = appointments.length;
+            document.getElementById('activeServicesCount').textContent = services.length;
+            document.getElementById('lastActivity').textContent = appointments.length > 0 ? 
+                new Date(Math.max(...appointments.map(apt => new Date(apt.createdAt)))).toLocaleString('es-ES') : 
+                'Sin actividad';
+        }
+
+        function exportData() {
+            const data = {
+                appointments: appointments,
+                services: services,
+                scheduleAvailability: scheduleAvailability,
+                defaultBusinessHours: defaultBusinessHours,
+                systemConfig: systemConfig,
+                notificationConfig: notificationConfig,
+                exportDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `onice-estudio-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            showNotification('Datos exportados exitosamente', 'success');
+        }
+
+        function cleanOldData() {
+            // Crear modal de confirmación
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Limpiar Datos Antiguos</h3>
+                    <p class="text-gray-600 mb-6">Esto eliminará todas las citas completadas y canceladas. ¿Continuar?</p>
+                    <div class="flex space-x-4">
+                        <button onclick="confirmCleanData()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg">
+                            Sí, Limpiar
+                        </button>
+                        <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function confirmCleanData() {
+            const oldCount = appointments.length;
+            appointments = appointments.filter(apt => apt.status === 'pending' || apt.status === 'confirmed');
+            const newCount = appointments.length;
+            const cleaned = oldCount - newCount;
+            
+            showNotification(`${cleaned} citas antiguas eliminadas`, 'success');
+            updateAdminDashboard();
+            updateSystemStats();
+            
+            // Remover modal
+            document.querySelector('.fixed.inset-0').remove();
+        }
+
+        // ===== FUNCIONES DE REPORTES =====
+        function updateReportSummary() {
+            const thisMonth = new Date();
+            thisMonth.setDate(1);
+            
+            const monthlyAppointments = appointments.filter(apt => new Date(apt.date) >= thisMonth);
+            const monthlyRevenue = monthlyAppointments.reduce((sum, apt) => sum + apt.total, 0);
+            const completedCount = appointments.filter(apt => apt.status === 'completed').length;
+            const uniqueClients = new Set(appointments.map(apt => apt.clientEmail)).size;
+            
+            // Calcular tasa de ocupación (simplificado)
+            const totalSlots = 30 * 8; // 30 días * 8 slots por día (aproximado)
+            const occupiedSlots = appointments.filter(apt => apt.status !== 'cancelled').length;
+            const occupancyRate = totalSlots > 0 ? Math.round((occupiedSlots / totalSlots) * 100) : 0;
+            
+            document.getElementById('monthlyRevenue').textContent = `$${monthlyRevenue.toFixed(2)}`;
+            document.getElementById('completedAppointments').textContent = completedCount;
+            document.getElementById('occupancyRate').textContent = `${occupancyRate}%`;
+            document.getElementById('uniqueClients').textContent = uniqueClients;
+        }
+
+        function generateReport(event) {
+            event.preventDefault();
+            
+            const reportType = document.getElementById('reportType').value;
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            const resultsDiv = document.getElementById('reportResults');
+            
+            if (!startDate || !endDate) {
+                showNotification('Por favor selecciona las fechas del reporte', 'error');
+                return;
+            }
+            
+            const filteredAppointments = appointments.filter(apt => {
+                const aptDate = new Date(apt.date);
+                return aptDate >= new Date(startDate) && aptDate <= new Date(endDate);
+            });
+            
+            let reportHTML = '';
+            
+            switch (reportType) {
+                case 'appointments':
+                    reportHTML = generateAppointmentsReport(filteredAppointments, startDate, endDate);
+                    break;
+                case 'services':
+                    reportHTML = generateServicesReport(filteredAppointments);
+                    break;
+                case 'revenue':
+                    reportHTML = generateRevenueReport(filteredAppointments, startDate, endDate);
+                    break;
+                case 'clients':
+                    reportHTML = generateClientsReport(filteredAppointments);
+                    break;
+            }
+            
+            resultsDiv.innerHTML = reportHTML;
+        }
+
+        function generateAppointmentsReport(appointments, startDate, endDate) {
+            const total = appointments.length;
+            const byStatus = appointments.reduce((acc, apt) => {
+                acc[apt.status] = (acc[apt.status] || 0) + 1;
+                return acc;
+            }, {});
+            
+            return `
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-lg">Reporte de Citas (${startDate} - ${endDate})</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-blue-50 p-4 rounded">
+                            <div class="text-2xl font-bold text-blue-800">${total}</div>
+                            <div class="text-sm text-blue-600">Total de Citas</div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded">
+                            <div class="text-2xl font-bold text-green-800">${byStatus.confirmed || 0}</div>
+                            <div class="text-sm text-green-600">Confirmadas</div>
+                        </div>
+                        <div class="bg-yellow-50 p-4 rounded">
+                            <div class="text-2xl font-bold text-yellow-800">${byStatus.pending || 0}</div>
+                            <div class="text-sm text-yellow-600">Pendientes</div>
+                        </div>
+                        <div class="bg-red-50 p-4 rounded">
+                            <div class="text-2xl font-bold text-red-800">${byStatus.cancelled || 0}</div>
+                            <div class="text-sm text-red-600">Canceladas</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateServicesReport(appointments) {
+            const serviceCount = {};
+            appointments.forEach(apt => {
+                apt.services.forEach(service => {
+                    serviceCount[service.name] = (serviceCount[service.name] || 0) + 1;
+                });
+            });
+            
+            const sortedServices = Object.entries(serviceCount)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 10);
+            
+            return `
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-lg">Servicios Más Solicitados</h4>
+                    <div class="space-y-2">
+                        ${sortedServices.map(([service, count]) => `
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                <span class="font-medium">${service}</span>
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">${count} veces</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateRevenueReport(appointments, startDate, endDate) {
+            const totalRevenue = appointments.reduce((sum, apt) => sum + apt.total, 0);
+            const totalAdvances = appointments.reduce((sum, apt) => sum + apt.advance, 0);
+            const avgPerAppointment = appointments.length > 0 ? totalRevenue / appointments.length : 0;
+            
+            return `
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-lg">Reporte de Ingresos (${startDate} - ${endDate})</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-green-50 p-4 rounded">
+                            <div class="text-2xl font-bold text-green-800">$${totalRevenue.toFixed(2)}</div>
+                            <div class="text-sm text-green-600">Ingresos Totales</div>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded">
+                            <div class="text-2xl font-bold text-blue-800">$${totalAdvances.toFixed(2)}</div>
+                            <div class="text-sm text-blue-600">Adelantos Recibidos</div>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded">
+                            <div class="text-2xl font-bold text-purple-800">$${avgPerAppointment.toFixed(2)}</div>
+                            <div class="text-sm text-purple-600">Promedio por Cita</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateClientsReport(appointments) {
+            const clientCount = {};
+            appointments.forEach(apt => {
+                const key = `${apt.clientName} (${apt.clientEmail})`;
+                clientCount[key] = (clientCount[key] || 0) + 1;
+            });
+            
+            const sortedClients = Object.entries(clientCount)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 10);
+            
+            return `
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-lg">Clientes Más Frecuentes</h4>
+                    <div class="space-y-2">
+                        ${sortedClients.map(([client, count]) => `
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                <span class="font-medium">${client}</span>
+                                <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">${count} citas</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== FUNCIÓN DE NOTIFICACIONES =====
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification p-4 rounded-lg shadow-lg text-white max-w-sm ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 
+                type === 'info' ? 'bg-blue-500' : 'bg-gray-500'
+            }`;
+            
+            notification.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">×</button>
+                </div>
+            `;
+            
+            document.getElementById('notifications').appendChild(notification);
+            
+            // Auto-remover después de 5 segundos
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // ===== ACCESOS DIRECTOS =====
+        // Agregar acceso directo al panel admin
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+                showAdminLogin();
+            }
+        });
+
+        // ===== VERIFICACIÓN DE SESIÓN =====
+        function checkAdminSession() {
+            if (!adminSession.isLoggedIn && currentView === 'admin') {
+                switchToClient();
+                showNotification('Sesión expirada. Por favor inicia sesión nuevamente.', 'error');
+            }
+        }
+
+        // Verificar sesión cada 5 minutos
+        setInterval(checkAdminSession, 5 * 60 * 1000);
+
+        /* ==================== FIN JAVASCRIPT ==================== */
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'992aacbb1496e855',t:'MTc2MTE1MzcyNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<
